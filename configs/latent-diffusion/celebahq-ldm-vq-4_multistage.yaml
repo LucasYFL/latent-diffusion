@@ -35,9 +35,9 @@ model:
         - 4
         num_head_channels: 32
         de_nfs:
-        - 320
         - 224
-        - 64
+        - 192
+        - 32
         stage_interval:
         - 442
         - 631
@@ -69,8 +69,8 @@ model:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 1
-    num_workers: 1
+    batch_size: 6
+    num_workers: 5
     wrap: false
     train:
       target: taming.data.faceshq.CelebAHQTrain

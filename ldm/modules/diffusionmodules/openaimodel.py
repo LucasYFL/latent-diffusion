@@ -2,7 +2,7 @@ from abc import abstractmethod
 from functools import partial
 import math
 from typing import Iterable
-
+import copy
 import numpy as np
 import torch as th
 import torch.nn as nn
@@ -825,7 +825,7 @@ class UNetModel_multistage(nn.Module):
         self.image_size = image_size
         self.in_channels = in_channels
         self.en_nf = model_channels
-        # self.model_channels = model_channels
+        self.model_channels = model_channels
         self.stage_num = stage_num
         self.de_nfs = de_nfs
         self.stage_interval = stage_interval
@@ -971,7 +971,7 @@ class UNetModel_multistage(nn.Module):
         for i_stage in range(self.stage_num):
             ch = chc
             output_blocks = nn.ModuleList([])
-            input_block_chans_copy = input_block_chans
+            input_block_chans_copy = copy.copy(input_block_chans)
             for level, mult in list(enumerate(channel_mult))[::-1]:
                 for i in range(num_res_blocks + 1):
                     ich = input_block_chans_copy.pop()
@@ -1044,7 +1044,7 @@ class UNetModel_multistage(nn.Module):
         self.de_modules = nn.ModuleList(self.de_modules)
         self.outs = nn.ModuleList(self.outs)
         self.id_predictors = nn.ModuleList(self.id_predictors)
-
+        self.convert_to_fp16()
     def convert_to_fp16(self):
         """
         Convert the torso of the model to float16.

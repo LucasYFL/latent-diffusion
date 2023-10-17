@@ -24,7 +24,7 @@ from ldm.modules.distributions.distributions import normal_kl, DiagonalGaussianD
 from ldm.models.autoencoder import VQModelInterface, IdentityFirstStage, AutoencoderKL
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from ldm.models.diffusion.ddim import DDIMSampler
-
+import random
 
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
@@ -323,7 +323,13 @@ class DDPM(pl.LightningModule):
     def forward(self, x, *args, **kwargs):
         # b, c, h, w, device, img_size, = *x.shape, x.device, self.image_size
         # assert h == img_size and w == img_size, f'height and width of image must be {img_size}'
-        t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
+        # t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
+        choose_stage = random.randint(1, 3)
+        stages = [0,442,631,1000]
+        intervals = model.module.stage_interval[choose_stage]
+        lower = stages[choose_stage-1]
+        upper = stages[choose_stage]
+        t = torch.randint(lower,upper, (x.shape[0],), device=self.device).long()
         return self.p_losses(x, t, *args, **kwargs)
 
     def get_input(self, batch, k):

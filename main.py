@@ -474,9 +474,11 @@ if __name__ == "__main__":
             "If you want to resume training in a new log folder, "
             "use -n/--name in combination with --resume_from_checkpoint"
         )
-    if opt.resume:
-        if not os.path.exists(opt.resume):
-            raise ValueError("Cannot find {}".format(opt.resume))
+    cur_log = os.listdir(opt.logdir)
+    if len(cur_log)==1:
+        # if not os.path.exists(opt.resume):
+        #     raise ValueError("Cannot find {}".format(opt.resume))
+        opt.resume = os.path.join(opt.logdir, cur_log[0])
         if os.path.isfile(opt.resume):
             paths = opt.resume.split("/")
             # idx = len(paths)-paths[::-1].index("logs")+1

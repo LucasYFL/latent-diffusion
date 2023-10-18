@@ -555,6 +555,7 @@ if __name__ == "__main__":
                 "params": {
                     "name": "testtube",
                     "save_dir": logdir,
+                    "debug": True
                 }
             },
         }
@@ -572,9 +573,10 @@ if __name__ == "__main__":
             "target": "pytorch_lightning.callbacks.ModelCheckpoint",
             "params": {
                 "dirpath": ckptdir,
-                "filename": "{epoch:06}",
+                "filename": "{epoch:06}-{step:09}",
                 "verbose": True,
                 "save_last": True,
+                'every_n_train_steps': 1000,
             }
         }
         if hasattr(model, "monitor"):
@@ -642,8 +644,8 @@ if __name__ == "__main__":
                          "dirpath": os.path.join(ckptdir, 'trainstep_checkpoints'),
                          "filename": "{epoch:06}-{step:09}",
                          "verbose": True,
-                         'save_top_k': -1,
-                         'every_n_train_steps': 10000,
+                         'save_top_k': 3,
+                         'every_n_train_steps': 1000,
                          'save_weights_only': True
                      }
                      }

@@ -326,7 +326,6 @@ class DDPM(pl.LightningModule):
         # t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
         choose_stage = random.randint(1, 3)
         stages = [0,442,631,1000]
-        intervals = model.module.stage_interval[choose_stage]
         lower = stages[choose_stage-1]
         upper = stages[choose_stage]
         t = torch.randint(lower,upper, (x.shape[0],), device=self.device).long()

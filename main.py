@@ -19,7 +19,7 @@ from pytorch_lightning.utilities import rank_zero_info
 
 from ldm.data.base import Txt2ImgIterableBaseDataset
 from ldm.util import instantiate_from_config
-
+import gc
 
 def get_parser(**parser_kwargs):
     def str2bool(v):
@@ -399,6 +399,8 @@ class CUDACallback(Callback):
         torch.cuda.reset_peak_memory_stats(trainer.root_gpu)
         torch.cuda.synchronize(trainer.root_gpu)
         self.start_time = time.time()
+        torch.cuda.empty_cache()
+        gc.collect()
 
     def on_train_epoch_end(self, trainer, pl_module, outputs):
         torch.cuda.synchronize(trainer.root_gpu)
@@ -413,6 +415,7 @@ class CUDACallback(Callback):
             rank_zero_info(f"Average Peak memory {max_memory:.2f}MiB")
         except AttributeError:
             pass
+        
 
 
 if __name__ == "__main__":
@@ -576,13 +579,13 @@ if __name__ == "__main__":
                 "filename": "{epoch:06}-{step:09}",
                 "verbose": True,
                 "save_last": True,
-                'every_n_train_steps': 500,
+                'every_n_epochs':10
             }
         }
-        if hasattr(model, "monitor"):
-            print(f"Monitoring {model.monitor} as checkpoint metric.")
-            default_modelckpt_cfg["params"]["monitor"] = model.monitor
-            default_modelckpt_cfg["params"]["save_top_k"] = 3
+        # if hasattr(model, "monitor"):
+        #     print(f"Monitoring {model.monitor} as checkpoint metric.")
+        #     default_modelckpt_cfg["params"]["monitor"] = model.monitor
+        #     default_modelckpt_cfg["params"]["save_top_k"] = 3
 
         if "modelcheckpoint" in lightning_config:
             modelckpt_cfg = lightning_config.modelcheckpoint
@@ -645,7 +648,7 @@ if __name__ == "__main__":
                          "filename": "{epoch:06}-{step:09}",
                          "verbose": True,
                          'save_top_k': 3,
-                         'every_n_train_steps': 500,
+                         'every_n_epochs':10,
                          'save_weights_only': True
                      }
                      }

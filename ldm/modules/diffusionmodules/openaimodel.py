@@ -1044,7 +1044,6 @@ class UNetModel_multistage(nn.Module):
         self.de_modules = nn.ModuleList(self.de_modules)
         self.outs = nn.ModuleList(self.outs)
         self.id_predictors = nn.ModuleList(self.id_predictors)
-        self.convert_to_fp16()
     def convert_to_fp16(self):
         """
         Convert the torso of the model to float16.

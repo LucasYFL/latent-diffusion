@@ -25,7 +25,7 @@ from ldm.models.autoencoder import VQModelInterface, IdentityFirstStage, Autoenc
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from ldm.models.diffusion.ddim import DDIMSampler
 import random
-
+import gc
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
                          'adm': 'y'}
@@ -873,7 +873,12 @@ class LatentDiffusion(DDPM):
         return loss
 
     def forward(self, x, c, *args, **kwargs):
-        t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
+        # t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
+        choose_stage = torch.randint(1, 4, (1,)).long().item()
+        stages = [0,442,631,1000]
+        lower = stages[choose_stage-1]
+        upper = stages[choose_stage]
+        t = torch.randint(lower,upper, (x.shape[0],), device=self.device).long()
         if self.model.conditioning_key is not None:
             assert c is not None
             if self.cond_stage_trainable:
@@ -1030,9 +1035,14 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError()
 
         loss_simple = self.get_loss(model_output, target, mean=False).mean([1, 2, 3])
+        if not self.training:
+            loss_simple = loss_simple.detach().cpu()
+            logvar_t = self.logvar[t].cpu()
+        else:
+            logvar_t = self.logvar[t].to(self.device)
         loss_dict.update({f'{prefix}/loss_simple': loss_simple.mean()})
 
-        logvar_t = self.logvar[t].to(self.device)
+        
         loss = loss_simple / torch.exp(logvar_t) + logvar_t
         # loss = loss_simple / torch.exp(self.logvar) + self.logvar
         if self.learn_logvar:
@@ -1042,6 +1052,9 @@ class LatentDiffusion(DDPM):
         loss = self.l_simple_weight * loss.mean()
 
         loss_vlb = self.get_loss(model_output, target, mean=False).mean(dim=(1, 2, 3))
+        if not self.training:
+            loss_vlb = loss_vlb.detach().cpu()
+            self.lvlb_weights = self.lvlb_weights.detach().cpu()
         loss_vlb = (self.lvlb_weights[t] * loss_vlb).mean()
         loss_dict.update({f'{prefix}/loss_vlb': loss_vlb})
         loss += (self.original_elbo_weight * loss_vlb)
@@ -1294,14 +1307,18 @@ class LatentDiffusion(DDPM):
                     t = t.to(self.device).long()
                     noise = torch.randn_like(z_start)
                     z_noisy = self.q_sample(x_start=z_start, t=t, noise=noise)
-                    diffusion_row.append(self.decode_first_stage(z_noisy))
-
+                    decoded = self.decode_first_stage(z_noisy).cpu()
+                    diffusion_row.append(decoded)
+            
             diffusion_row = torch.stack(diffusion_row)  # n_log_step, n_row, C, H, W
             diffusion_grid = rearrange(diffusion_row, 'n b c h w -> b n c h w')
             diffusion_grid = rearrange(diffusion_grid, 'b n c h w -> (b n) c h w')
             diffusion_grid = make_grid(diffusion_grid, nrow=diffusion_row.shape[0])
             log["diffusion_row"] = diffusion_grid
-
+            del noise
+            del z_noisy
+            torch.cuda.empty_cache()
+            gc.collect()
         if sample:
             # get denoise row
             with self.ema_scope("Plotting"):
@@ -1309,11 +1326,15 @@ class LatentDiffusion(DDPM):
                                                          ddim_steps=ddim_steps,eta=ddim_eta)
                 # samples, z_denoise_row = self.sample(cond=c, batch_size=N, return_intermediates=True)
             x_samples = self.decode_first_stage(samples)
+            
             log["samples"] = x_samples
             if plot_denoise_rows:
                 denoise_grid = self._get_denoise_row_from_list(z_denoise_row)
                 log["denoise_row"] = denoise_grid
-
+            del samples
+            del z_denoise_row
+            torch.cuda.empty_cache()
+            gc.collect()
             if quantize_denoised and not isinstance(self.first_stage_model, AutoencoderKL) and not isinstance(
                     self.first_stage_model, IdentityFirstStage):
                 # also display when quantizing x0 while sampling
@@ -1323,9 +1344,12 @@ class LatentDiffusion(DDPM):
                                                              quantize_denoised=True)
                     # samples, z_denoise_row = self.sample(cond=c, batch_size=N, return_intermediates=True,
                     #                                      quantize_denoised=True)
-                x_samples = self.decode_first_stage(samples.to(self.device))
+                x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
                 log["samples_x0_quantized"] = x_samples
-
+                del samples 
+                del z_denoise_row
+                torch.cuda.empty_cache()
+                gc.collect()
             if inpaint:
                 # make a simple center square
                 b, h, w = z.shape[0], z.shape[2], z.shape[3]
@@ -1337,25 +1361,35 @@ class LatentDiffusion(DDPM):
 
                     samples, _ = self.sample_log(cond=c,batch_size=N,ddim=use_ddim, eta=ddim_eta,
                                                 ddim_steps=ddim_steps, x0=z[:N], mask=mask)
-                x_samples = self.decode_first_stage(samples.to(self.device))
+                x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
                 log["samples_inpainting"] = x_samples
                 log["mask"] = mask
-
+                del samples
+                del _
+                torch.cuda.empty_cache()
+                gc.collect()
                 # outpaint
                 with self.ema_scope("Plotting Outpaint"):
                     samples, _ = self.sample_log(cond=c, batch_size=N, ddim=use_ddim,eta=ddim_eta,
                                                 ddim_steps=ddim_steps, x0=z[:N], mask=mask)
-                x_samples = self.decode_first_stage(samples.to(self.device))
+                x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
                 log["samples_outpainting"] = x_samples
-
+                del samples
+                del _
+                torch.cuda.empty_cache()
+                gc.collect()
         if plot_progressive_rows:
             with self.ema_scope("Plotting Progressives"):
                 img, progressives = self.progressive_denoising(c,
                                                                shape=(self.channels, self.image_size, self.image_size),
                                                                batch_size=N)
+            img = img.cpu()
             prog_row = self._get_denoise_row_from_list(progressives, desc="Progressive Generation")
             log["progressive_row"] = prog_row
-
+            del progressives
+            del img
+            torch.cuda.empty_cache()
+            gc.collect()
         if return_keys:
             if np.intersect1d(list(log.keys()), return_keys).shape[0] == 0:
                 return log

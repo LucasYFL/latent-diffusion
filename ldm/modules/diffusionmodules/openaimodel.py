@@ -1081,9 +1081,10 @@ class UNetModel_multistage(nn.Module):
             emb = emb + self.label_emb(y)
 
         h = x.type(self.dtype)
+        current_stage = 0
         for i_stage, interval in enumerate(self.stage_interval):
             current_stage = i_stage
-            if timesteps[0]>interval:
+            if timesteps[0]<interval:
                 break
 
         for module in self.input_blocks:

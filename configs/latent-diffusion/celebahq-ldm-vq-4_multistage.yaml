@@ -69,17 +69,17 @@ model:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 6
+    batch_size: 4
     num_workers: 5
     wrap: false
     train:
       target: taming.data.faceshq.CelebAHQTrain
       params:
         size: 256
-    validation:
-      target: taming.data.faceshq.CelebAHQValidation
-      params:
-        size: 256
+    # validation:
+    #   target: taming.data.faceshq.CelebAHQValidation
+    #   params:
+    #     size: 256
 
 
 lightning:
@@ -87,7 +87,7 @@ lightning:
     image_logger:
       target: main.ImageLogger
       params:
-        batch_frequency: 5000
+        batch_frequency: 1000
         max_images: 4
         increase_log_steps: False
         disabled: False

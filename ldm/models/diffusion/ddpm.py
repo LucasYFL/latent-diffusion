@@ -874,7 +874,19 @@ class LatentDiffusion(DDPM):
 
     def forward(self, x, c, *args, **kwargs):
         # t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
-        choose_stage = torch.randint(1, 4, (1,)).long().item()
+        rank = int(str(self.device).split(":")[1])
+        random_num = torch.rand(size=(1,)).item()
+        if rank % 2 == 0:
+            if random_num <= 2/3:
+                choose_stage = 1
+            else:
+                choose_stage = 3
+        else:
+            if random_num <= 2/3:
+                choose_stage = 2
+            else:
+                choose_stage = 3
+        # choose_stage = torch.randint(1, 4, (1,)).long().item()
         stages = [0,442,631,1000]
         lower = stages[choose_stage-1]
         upper = stages[choose_stage]
@@ -1054,8 +1066,10 @@ class LatentDiffusion(DDPM):
         loss_vlb = self.get_loss(model_output, target, mean=False).mean(dim=(1, 2, 3))
         if not self.training:
             loss_vlb = loss_vlb.detach().cpu()
-            self.lvlb_weights = self.lvlb_weights.detach().cpu()
-        loss_vlb = (self.lvlb_weights[t] * loss_vlb).mean()
+            # self.lvlb_weights = self.lvlb_weights.detach().cpu()
+            loss_vlb = (self.lvlb_weights[t].detach().cpu() * loss_vlb).mean()
+        else:  
+            loss_vlb = (self.lvlb_weights[t] * loss_vlb).mean()
         loss_dict.update({f'{prefix}/loss_vlb': loss_vlb})
         loss += (self.original_elbo_weight * loss_vlb)
         loss_dict.update({f'{prefix}/loss': loss})

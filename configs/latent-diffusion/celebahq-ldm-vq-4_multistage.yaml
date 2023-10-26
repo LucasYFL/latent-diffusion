@@ -76,21 +76,21 @@ data:
       target: taming.data.faceshq.CelebAHQTrain
       params:
         size: 256
-    # validation:
-    #   target: taming.data.faceshq.CelebAHQValidation
-    #   params:
-    #     size: 256
+    validation:
+      target: taming.data.faceshq.CelebAHQValidation
+      params:
+        size: 256
 
 
-lightning:
-  # callbacks:
-  #   image_logger:
-  #     target: main.ImageLogger
-  #     params:
-  #       batch_frequency: 1000
-  #       max_images: 4
-  #       increase_log_steps: False
-  #       disabled: False
+# lightning:
+#   callbacks:
+#     image_logger:
+#       target: main.ImageLogger
+#       params:
+#         batch_frequency: 1000
+#         max_images: 4
+#         increase_log_steps: False
+#         disabled: False
 
   trainer:
     benchmark: True

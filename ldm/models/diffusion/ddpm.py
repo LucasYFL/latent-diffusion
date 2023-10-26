@@ -1311,28 +1311,28 @@ class LatentDiffusion(DDPM):
             if ismap(xc):
                 log["original_conditioning"] = self.to_rgb(xc)
 
-        if plot_diffusion_rows:
-            # get diffusion row
-            diffusion_row = list()
-            z_start = z[:n_row]
-            for t in range(self.num_timesteps):
-                if t % self.log_every_t == 0 or t == self.num_timesteps - 1:
-                    t = repeat(torch.tensor([t]), '1 -> b', b=n_row)
-                    t = t.to(self.device).long()
-                    noise = torch.randn_like(z_start)
-                    z_noisy = self.q_sample(x_start=z_start, t=t, noise=noise)
-                    decoded = self.decode_first_stage(z_noisy).cpu()
-                    diffusion_row.append(decoded)
+        # if plot_diffusion_rows:
+        #     # get diffusion row
+        #     diffusion_row = list()
+        #     z_start = z[:n_row]
+        #     for t in range(self.num_timesteps):
+        #         if t % self.log_every_t == 0 or t == self.num_timesteps - 1:
+        #             t = repeat(torch.tensor([t]), '1 -> b', b=n_row)
+        #             t = t.to(self.device).long()
+        #             noise = torch.randn_like(z_start)
+        #             z_noisy = self.q_sample(x_start=z_start, t=t, noise=noise)
+        #             decoded = self.decode_first_stage(z_noisy).cpu()
+        #             diffusion_row.append(decoded)
             
-            diffusion_row = torch.stack(diffusion_row)  # n_log_step, n_row, C, H, W
-            diffusion_grid = rearrange(diffusion_row, 'n b c h w -> b n c h w')
-            diffusion_grid = rearrange(diffusion_grid, 'b n c h w -> (b n) c h w')
-            diffusion_grid = make_grid(diffusion_grid, nrow=diffusion_row.shape[0])
-            log["diffusion_row"] = diffusion_grid
-            del noise
-            del z_noisy
-            torch.cuda.empty_cache()
-            gc.collect()
+        #     diffusion_row = torch.stack(diffusion_row)  # n_log_step, n_row, C, H, W
+        #     diffusion_grid = rearrange(diffusion_row, 'n b c h w -> b n c h w')
+        #     diffusion_grid = rearrange(diffusion_grid, 'b n c h w -> (b n) c h w')
+        #     diffusion_grid = make_grid(diffusion_grid, nrow=diffusion_row.shape[0])
+        #     log["diffusion_row"] = diffusion_grid
+        #     del noise
+        #     del z_noisy
+        #     torch.cuda.empty_cache()
+        #     gc.collect()
         if sample:
             # get denoise row
             with self.ema_scope("Plotting"):
@@ -1342,57 +1342,57 @@ class LatentDiffusion(DDPM):
             x_samples = self.decode_first_stage(samples)
             
             log["samples"] = x_samples
-            if plot_denoise_rows:
-                denoise_grid = self._get_denoise_row_from_list(z_denoise_row)
-                log["denoise_row"] = denoise_grid
-            del samples
-            del z_denoise_row
-            torch.cuda.empty_cache()
-            gc.collect()
-            if quantize_denoised and not isinstance(self.first_stage_model, AutoencoderKL) and not isinstance(
-                    self.first_stage_model, IdentityFirstStage):
-                # also display when quantizing x0 while sampling
-                with self.ema_scope("Plotting Quantized Denoised"):
-                    samples, z_denoise_row = self.sample_log(cond=c,batch_size=N,ddim=use_ddim,
-                                                             ddim_steps=ddim_steps,eta=ddim_eta,
-                                                             quantize_denoised=True)
-                    # samples, z_denoise_row = self.sample(cond=c, batch_size=N, return_intermediates=True,
-                    #                                      quantize_denoised=True)
-                x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
-                log["samples_x0_quantized"] = x_samples
-                del samples 
-                del z_denoise_row
-                torch.cuda.empty_cache()
-                gc.collect()
-            if inpaint:
-                # make a simple center square
-                b, h, w = z.shape[0], z.shape[2], z.shape[3]
-                mask = torch.ones(N, h, w).to(self.device)
-                # zeros will be filled in
-                mask[:, h // 4:3 * h // 4, w // 4:3 * w // 4] = 0.
-                mask = mask[:, None, ...]
-                with self.ema_scope("Plotting Inpaint"):
+        #     if plot_denoise_rows:
+        #         denoise_grid = self._get_denoise_row_from_list(z_denoise_row)
+        #         log["denoise_row"] = denoise_grid
+        #     del samples
+        #     del z_denoise_row
+        #     torch.cuda.empty_cache()
+        #     gc.collect()
+        #     if quantize_denoised and not isinstance(self.first_stage_model, AutoencoderKL) and not isinstance(
+        #             self.first_stage_model, IdentityFirstStage):
+        #         # also display when quantizing x0 while sampling
+        #         with self.ema_scope("Plotting Quantized Denoised"):
+        #             samples, z_denoise_row = self.sample_log(cond=c,batch_size=N,ddim=use_ddim,
+        #                                                      ddim_steps=ddim_steps,eta=ddim_eta,
+        #                                                      quantize_denoised=True)
+        #             # samples, z_denoise_row = self.sample(cond=c, batch_size=N, return_intermediates=True,
+        #             #                                      quantize_denoised=True)
+        #         x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
+        #         log["samples_x0_quantized"] = x_samples
+        #         del samples 
+        #         del z_denoise_row
+        #         torch.cuda.empty_cache()
+        #         gc.collect()
+        #     if inpaint:
+        #         # make a simple center square
+        #         b, h, w = z.shape[0], z.shape[2], z.shape[3]
+        #         mask = torch.ones(N, h, w).to(self.device)
+        #         # zeros will be filled in
+        #         mask[:, h // 4:3 * h // 4, w // 4:3 * w // 4] = 0.
+        #         mask = mask[:, None, ...]
+        #         with self.ema_scope("Plotting Inpaint"):
 
-                    samples, _ = self.sample_log(cond=c,batch_size=N,ddim=use_ddim, eta=ddim_eta,
-                                                ddim_steps=ddim_steps, x0=z[:N], mask=mask)
-                x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
-                log["samples_inpainting"] = x_samples
-                log["mask"] = mask
-                del samples
-                del _
-                torch.cuda.empty_cache()
-                gc.collect()
-                # outpaint
-                with self.ema_scope("Plotting Outpaint"):
-                    samples, _ = self.sample_log(cond=c, batch_size=N, ddim=use_ddim,eta=ddim_eta,
-                                                ddim_steps=ddim_steps, x0=z[:N], mask=mask)
-                x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
-                log["samples_outpainting"] = x_samples
-                del samples
-                del _
-                torch.cuda.empty_cache()
-                gc.collect()
-        if plot_progressive_rows:
+        #             samples, _ = self.sample_log(cond=c,batch_size=N,ddim=use_ddim, eta=ddim_eta,
+        #                                         ddim_steps=ddim_steps, x0=z[:N], mask=mask)
+        #         x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
+        #         log["samples_inpainting"] = x_samples
+        #         log["mask"] = mask
+        #         del samples
+        #         del _
+        #         torch.cuda.empty_cache()
+        #         gc.collect()
+        #         # outpaint
+        #         with self.ema_scope("Plotting Outpaint"):
+        #             samples, _ = self.sample_log(cond=c, batch_size=N, ddim=use_ddim,eta=ddim_eta,
+        #                                         ddim_steps=ddim_steps, x0=z[:N], mask=mask)
+        #         x_samples = self.decode_first_stage(samples.to(self.device)).cpu()
+        #         log["samples_outpainting"] = x_samples
+        #         del samples
+        #         del _
+        #         torch.cuda.empty_cache()
+        #         gc.collect()
+        # if plot_progressive_rows:
             with self.ema_scope("Plotting Progressives"):
                 img, progressives = self.progressive_denoising(c,
                                                                shape=(self.channels, self.image_size, self.image_size),

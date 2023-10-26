@@ -83,14 +83,14 @@ data:
 
 
 lightning:
-  callbacks:
-    image_logger:
-      target: main.ImageLogger
-      params:
-        batch_frequency: 1000
-        max_images: 4
-        increase_log_steps: False
-        disabled: False
+  # callbacks:
+  #   image_logger:
+  #     target: main.ImageLogger
+  #     params:
+  #       batch_frequency: 1000
+  #       max_images: 4
+  #       increase_log_steps: False
+  #       disabled: False
 
   trainer:
     benchmark: True

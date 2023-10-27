@@ -1393,17 +1393,17 @@ class LatentDiffusion(DDPM):
         #         torch.cuda.empty_cache()
         #         gc.collect()
         # if plot_progressive_rows:
-            with self.ema_scope("Plotting Progressives"):
-                img, progressives = self.progressive_denoising(c,
-                                                               shape=(self.channels, self.image_size, self.image_size),
-                                                               batch_size=N)
-            img = img.cpu()
-            prog_row = self._get_denoise_row_from_list(progressives, desc="Progressive Generation")
-            log["progressive_row"] = prog_row
-            del progressives
-            del img
-            torch.cuda.empty_cache()
-            gc.collect()
+            # with self.ema_scope("Plotting Progressives"):
+            #     img, progressives = self.progressive_denoising(c,
+            #                                                    shape=(self.channels, self.image_size, self.image_size),
+            #                                                    batch_size=N)
+            # img = img.cpu()
+            # prog_row = self._get_denoise_row_from_list(progressives, desc="Progressive Generation")
+            # log["progressive_row"] = prog_row
+            # del progressives
+            # del img
+            # torch.cuda.empty_cache()
+            # gc.collect()
         if return_keys:
             if np.intersect1d(list(log.keys()), return_keys).shape[0] == 0:
                 return log

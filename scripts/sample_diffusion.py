@@ -9,7 +9,7 @@ from PIL import Image
 
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.util import instantiate_from_config
-
+from ldm.models.diffusion.dpm_solver import DPMSolverSampler
 rescale = lambda x: (x + 1.) / 2.
 
 def custom_to_pil(x):
@@ -68,7 +68,7 @@ def convsample(model, shape, return_intermediates=True,
 @torch.no_grad()
 def convsample_ddim(model, steps, shape, eta=1.0
                     ):
-    ddim = DDIMSampler(model)
+    ddim = DPMSolverSampler(model)
     bs = shape[0]
     shape = shape[1:]
     samples, intermediates = ddim.sample(steps, batch_size=bs, shape=shape, eta=eta, verbose=False,)

@@ -18,7 +18,7 @@ model:
         image_size: 64
         in_channels: 3
         out_channels: 3
-        model_channels: 192
+        model_channels: 224
         attention_resolutions:
         # note: this isn\t actually the resolution but
         # the downsampling factor, i.e. this corresnponds to
@@ -37,7 +37,7 @@ model:
         de_nfs:
         - 224
         - 192
-        - 128
+        - 160
         stage_interval:
         - 442
         - 631

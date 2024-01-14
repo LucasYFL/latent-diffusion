@@ -570,7 +570,7 @@ if __name__ == "__main__":
                 "params": {
                     "name": "testtube",
                     "save_dir": logdir,
-                    "debug": True
+                    "debug": False
                 }
             },
         }
@@ -591,13 +591,13 @@ if __name__ == "__main__":
                 "filename": "{epoch:06}",
                 "verbose": True,
                 "save_last": True,
-                'every_n_epochs':1
+                'every_n_epochs':20
             }
         }
         if hasattr(model, "monitor"):
             print(f"Monitoring {model.monitor} as checkpoint metric.")
             default_modelckpt_cfg["params"]["monitor"] = model.monitor
-            default_modelckpt_cfg["params"]["save_top_k"] = 3
+            default_modelckpt_cfg["params"]["save_top_k"] = -1
 
         if "modelcheckpoint" in lightning_config:
             modelckpt_cfg = lightning_config.modelcheckpoint
@@ -659,8 +659,8 @@ if __name__ == "__main__":
                          "dirpath": os.path.join(ckptdir, 'trainstep_checkpoints'),
                          "filename": "{epoch:06}-{step:09}",
                          "verbose": True,
-                         'save_top_k': 3,
-                         'every_n_epochs':10,
+                         'save_top_k': -1,
+                         'every_n_epochs':20,
                          'save_weights_only': True
                      }
                      }

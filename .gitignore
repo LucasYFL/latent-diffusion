@@ -1,0 +1,5 @@
+./cel*
+./data
+./enc224
+./*.out
+./models/first_stage_models/vq-f4/model.ckpt

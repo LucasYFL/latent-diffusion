@@ -37,7 +37,7 @@ model:
         de_nfs:
         - 224
         - 192
-        - 128
+        - 160
         stage_interval:
         - 442
         - 631

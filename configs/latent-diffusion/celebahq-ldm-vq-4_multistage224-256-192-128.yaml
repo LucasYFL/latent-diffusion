@@ -18,7 +18,7 @@ model:
         image_size: 64
         in_channels: 3
         out_channels: 3
-        model_channels: 192
+        model_channels: 224
         attention_resolutions:
         # note: this isn\t actually the resolution but
         # the downsampling factor, i.e. this corresnponds to
@@ -35,7 +35,7 @@ model:
         - 4
         num_head_channels: 32
         de_nfs:
-        - 224
+        - 256
         - 192
         - 128
         stage_interval:
@@ -69,7 +69,7 @@ model:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 12
+    batch_size: 16
     num_workers: 5
     wrap: false
     train:

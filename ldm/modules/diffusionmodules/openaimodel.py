@@ -690,6 +690,15 @@ class UNetModel(nn.Module):
             conv_nd(dims, model_channels, n_embed, 1),
             #nn.LogSoftmax(dim=1)  # change to cross_entropy and produce non-normalized logits
         )
+        self._log_param()
+    def _log_param(self):
+        en_param_num = sum(p.numel() for p in self.input_blocks.parameters())
+        en_param_num += sum(p.numel() for p in self.middle_block.parameters())
+        print(f"Encoder params: {en_param_num}")
+        
+    
+        total_params = sum(p.numel() for p in self.parameters())  
+        print(f"Total params are {total_params}") 
 
     def convert_to_fp16(self):
         """
@@ -1044,6 +1053,22 @@ class UNetModel_multistage(nn.Module):
         self.de_modules = nn.ModuleList(self.de_modules)
         self.outs = nn.ModuleList(self.outs)
         self.id_predictors = nn.ModuleList(self.id_predictors)
+        self._log_param()
+    def _log_param(self):
+        en_param_num = sum(p.numel() for p in self.input_blocks.parameters())
+        en_param_num += sum(p.numel() for p in self.middle_block.parameters())
+        print(f"Encoder params: {en_param_num}")
+        
+        for idx_de, idx in enumerate((range(self.stage_num))):
+            idx_stage = idx + 1
+            de_param_num = sum(p.numel() for p in self.de_modules[idx_de].parameters())
+            out_num = sum(p.numel() for p in self.outs[idx].parameters())
+            id_num = sum(p.numel() for p in self.id_predictors[idx].parameters())  if self.predict_codebook_ids else 0
+            total_params = en_param_num + de_param_num + out_num +id_num
+            print(f"For stage {idx_stage}, the total params are {total_params},decoder {de_param_num + out_num +id_num}")
+      
+        total_params = sum(p.numel() for p in self.parameters())  
+        print(f"Total params are {total_params}") 
     def convert_to_fp16(self):
         """
         Convert the torso of the model to float16.
@@ -1091,6 +1116,7 @@ class UNetModel_multistage(nn.Module):
             h = module(h, emb, context)
             hs.append(h)
         h = self.middle_block(h, emb, context)
+        # return None
         for module in self.de_modules[current_stage]:
             h = th.cat([h, hs.pop()], dim=1)
             h = module(h, emb, context)

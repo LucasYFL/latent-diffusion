@@ -112,7 +112,7 @@ class DDPM(pl.LightningModule):
         self.logvar = torch.full(fill_value=logvar_init, size=(self.num_timesteps,))
         if self.learn_logvar:
             self.logvar = nn.Parameter(self.logvar, requires_grad=True)
-
+        # self.logvar = self.logvar.cuda()
 
     def register_schedule(self, given_betas=None, beta_schedule="linear", timesteps=1000,
                           linear_start=1e-4, linear_end=2e-2, cosine_s=8e-3):
@@ -875,17 +875,18 @@ class LatentDiffusion(DDPM):
     def forward(self, x, c, *args, **kwargs):
         # t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
         rank = int(str(self.device).split(":")[1])
-        random_num = torch.rand(size=(1,)).item()
-        if rank % 2 == 0:
-            if random_num <= 2/3:
-                choose_stage = 1
-            else:
-                choose_stage = 3
-        else:
-            if random_num <= 2/3:
-                choose_stage = 2
-            else:
-                choose_stage = 3
+        # random_num = torch.rand(size=(1,)).item()
+        # if rank % 2 == 0:
+        #     if random_num <= 2/3:
+        #         choose_stage = 1
+        #     else:
+        #         choose_stage = 3
+        # else:
+        #     if random_num <= 2/3:
+        #         choose_stage = 2
+        #     else:
+        #         choose_stage = 3
+        choose_stage = (rank%3)+1
         # choose_stage = torch.randint(1, 4, (1,)).long().item()
         stages = [0,442,631,1000]
         lower = stages[choose_stage-1]

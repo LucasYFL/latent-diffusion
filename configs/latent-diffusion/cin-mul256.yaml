@@ -20,7 +20,7 @@ model:
         image_size: 32
         in_channels: 4
         out_channels: 4
-        model_channels: 224
+        model_channels: 256
         attention_resolutions:
         #note: this isn\t actually the resolution but
         # the downsampling factor, i.e. this corresnponds to
@@ -36,9 +36,9 @@ model:
         - 4
         num_head_channels: 32
         de_nfs:
-        - 256
-        - 192
-        - 128
+        - 288
+        - 224
+        - 160
         stage_interval:
         - 442
         - 631

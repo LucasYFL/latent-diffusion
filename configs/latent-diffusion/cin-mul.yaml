@@ -20,7 +20,7 @@ model:
         image_size: 32
         in_channels: 4
         out_channels: 4
-        model_channels: 224
+        model_channels: 256
         attention_resolutions:
         #note: this isn\t actually the resolution but
         # the downsampling factor, i.e. this corresnponds to
@@ -37,8 +37,8 @@ model:
         num_head_channels: 32
         de_nfs:
         - 256
-        - 192
-        - 128
+        - 224
+        - 160
         stage_interval:
         - 442
         - 631
@@ -79,21 +79,18 @@ model:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 20
-    num_workers: 12
+    batch_size: 8
+    num_workers: 5
     wrap: false
     train:
-      target: ldm.data.imagenet.ImageNetTrain
+      target: taming.data.faceshq.CelebAHQTrain
       params:
-        data_root: "/scratch/qingqu_root/qingqu1/shared_data/ImageNet/"
-        config:
-          size: 256
+        size: 256
     validation:
-      target: ldm.data.imagenet.ImageNetValidation
+      target: taming.data.faceshq.CelebAHQValidation
       params:
-        data_root: "/scratch/qingqu_root/qingqu1/shared_data/ImageNet/"
-        config:
-          size: 256
+        size: 256
+
 
 
 lightning:

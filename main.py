@@ -116,8 +116,8 @@ def get_parser(**parser_kwargs):
         "--scale_lr",
         type=str2bool,
         nargs="?",
-        const=True,
-        default=True,
+        const=False,
+        default=False,
         help="scale base-lr by ngpu * batch_size * n_accumulate",
     )
     return parser
@@ -588,10 +588,11 @@ if __name__ == "__main__":
             "target": "pytorch_lightning.callbacks.ModelCheckpoint",
             "params": {
                 "dirpath": ckptdir,
-                "filename": "{epoch:06}",
+                "filename": "{epoch:06}-{step:09}",
                 "verbose": True,
                 "save_last": True,
-                'every_n_epochs':20
+                'every_n_epochs':1
+                # "every_n_train_steps": 5000
             }
         }
         if hasattr(model, "monitor"):
@@ -660,7 +661,9 @@ if __name__ == "__main__":
                          "filename": "{epoch:06}-{step:09}",
                          "verbose": True,
                          'save_top_k': -1,
-                         'every_n_epochs':20,
+                        # "every_n_train_steps": 5000,
+
+                         'every_n_epochs':1,
                          'save_weights_only': True
                      }
                      }

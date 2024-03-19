@@ -67,10 +67,10 @@ class DPMSolverSampler(object):
         ns = NoiseScheduleVP('discrete', alphas_cumprod=self.alphas_cumprod)
 
         model_fn = model_wrapper(
-            lambda x, t: self.model.apply_model(x, t, None),
+            lambda x, t ,c: self.model.apply_model(x, t, c),
             ns,
             model_type="noise",
-            guidance_type="uncond",
+            guidance_type="classifier-free",
             condition=conditioning,
             unconditional_condition=unconditional_conditioning,
             guidance_scale=unconditional_guidance_scale,

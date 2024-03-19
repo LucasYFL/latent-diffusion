@@ -29,6 +29,7 @@ class ClassEmbedder(nn.Module):
             key = self.key
         # this is for use in crossattn
         c = batch[key][:, None]
+        # c= torch.zeros(batch['image'].shape[0]).long().to(batch['image'].device)
         c = self.embedding(c)
         return c
 

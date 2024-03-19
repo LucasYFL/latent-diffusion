@@ -30,7 +30,7 @@ __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
                          'adm': 'y'}
 
-
+stage_count = 0
 def disabled_train(self, mode=True):
     """Overwrite model.train with this function to make sure train/eval mode
     does not change anymore."""
@@ -888,6 +888,10 @@ class LatentDiffusion(DDPM):
         #         choose_stage = 3
         choose_stage = (rank%3)+1
         # choose_stage = torch.randint(1, 4, (1,)).long().item()
+        # global stage_count
+        # choose_stage = stage_count+1
+        # stage_count += 1
+        # stage_count %= 3
         stages = [0,442,631,1000]
         lower = stages[choose_stage-1]
         upper = stages[choose_stage]
@@ -895,6 +899,8 @@ class LatentDiffusion(DDPM):
         if self.model.conditioning_key is not None:
             assert c is not None
             if self.cond_stage_trainable:
+                if torch.rand(1).item() < 0.1:
+                    c['class_label'] = 1000*torch.ones(c['class_label'].shape,device=self.device).long()
                 c = self.get_learned_conditioning(c)
             if self.shorten_cond_schedule:  # TODO: drop this option
                 tc = self.cond_ids[t].to(self.device)
